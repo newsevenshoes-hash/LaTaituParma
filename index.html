@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Taitù Parma - Catalogo</title>
+    <link rel="icon" type="image/png" href="cosplay_favicon.png">
+    <link rel="apple-touch-icon" href="cosplay_favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        h1, h2 { font-family: 'Playfair Display', serif; }
+        .bg-vintage-dark { background-color: #315b5a; }
+        .text-vintage-pink { color: #9c41a68a; }
+        .bg-vintage-pink { background-color: #cb8db9; }
+        .bg-vintage-teal { background-color: #a5417a; }
+        [x-cloak] { display: none !important; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800" x-data="store()" x-init="init()">
+
+    <header class="bg-vintage-dark shadow-xl p-4 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-4 cursor-pointer select-none" @click="toggleAdmin()">
+                <img src="taitu_palme_logo.png" alt="Logo" class="h-12 drop-shadow-md">
+                <div class="flex flex-col">
+                    <h1 class="text-white text-xl font-bold leading-none" style="font-family: 'Playfair Display', serif;">
+                        La Taitù Parma <span class="text-vintage-pink"></span>
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2" x-show="admin" x-cloak x-transition>
+                <a href="https://imgbb.com/upload" target="_blank" class="bg-amber-500 text-white px-3 py-2 rounded-xl text-[10px] font-bold uppercase shadow-lg">📸 Foto</a>
+                <button @click="window.open('https://docs.google.com/spreadsheets/d/1kt_7aXRlf_GSFIY0-oFN6mc18YMtQDUtNQWObGiJm_Y/edit', '_blank')" 
+                        class="bg-vintage-pink p-2 rounded-xl shadow-lg text-white">➕</button>
+            </div>
+        </div>
+
+        <div class="max-w-4xl mx-auto mt-4 flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            <button @click="categoriaSelezionata = 'tutti'" 
+                    :class="categoriaSelezionata === 'tutti' ? 'bg-vintage-pink text-white' : 'bg-slate-800 text-slate-400'"
+                    class="px-4 py-1.5 rounded-full text-[10px] font-bold uppercase whitespace-nowrap transition-all border border-slate-700">
+                Tutti
+            </button>
+            <template x-for="cat in getCategorie()" :key="cat">
+                <button @click="categoriaSelezionata = cat" 
+                        :class="categoriaSelezionata === cat ? 'bg-vintage-teal text-white' : 'bg-slate-800 text-slate-400'"
+                        class="px-4 py-1.5 rounded-full text-[10px] font-bold uppercase whitespace-nowrap transition-all border border-slate-700"
+                        x-text="cat">
+                </button>
+            </template>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-4">
+        
+        <div x-show="admin" x-cloak class="bg-amber-100 border-l-4 border-amber-500 p-2 mb-4 text-amber-700 text-[10px] font-bold uppercase text-center rounded tracking-widest">
+            Modalità Gestione Attiva
+        </div>
+
+        <div class="mb-6">
+            <input type="text" x-model="search" placeholder="Cerca nome o descrizione..." 
+                   class="w-full bg-white border-2 border-gray-100 p-4 rounded-2xl shadow-sm focus:border-vintage-pink outline-none transition-all">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+            <template x-for="prodotto in prodottiFiltrati()" :key="prodotto.id">
+                <div class="bg-white rounded-[2rem] shadow-lg overflow-hidden flex flex-col border-b-8 border-vintage-teal transition-transform duration-300">
+                    
+                    <div class="relative w-full h-80 bg-gray-100 overflow-hidden">
+                        <img :src="prodotto.foto" class="w-full h-full object-cover" @error="$el.src='https://via.placeholder.com/400x500?text=Immagine+In+Arrivo'">
+                        <span class="absolute top-4 right-4 bg-vintage-teal text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter" x-text="prodotto.categoria"></span>
+                    </div>
+                    
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h2 class="text-2xl font-bold mb-2 text-vintage-dark" x-text="prodotto.nome"></h2>
+                        <p class="text-gray-400 text-sm mb-4 italic flex-grow leading-relaxed" x-text="prodotto.descrizione"></p>
+                        
+                        <div class="mb-6">
+                            <span class="text-3xl font-black text-vintage-pink" x-text="'€' + prodotto.prezzo"></span>
+                        </div>
+
+                        <div class="mb-5">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-2 block font-sans">Seleziona Misura</label>
+                            <select x-model="prodotto.tagliaScelta" 
+                                    class="w-full bg-gray-50 border-2 border-gray-100 rounded-xl p-3 outline-none focus:border-vintage-pink appearance-none text-vintage-dark font-semibold font-sans">
+                                <option value="">Scegli...</option>
+                                <template x-for="opzione in getOpzioni(prodotto)" :key="opzione">
+                                    <option :value="opzione" x-text="opzione"></option>
+                                </template>
+                            </select>
+                        </div>
+
+                        <button @click="mandaOrdine(prodotto)" 
+                                class="w-full bg-vintage-pink hover:bg-[#d47a8d] text-white font-bold py-4 rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg font-sans uppercase text-sm tracking-widest">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.246 2.248 3.484 5.232 3.483 8.413-.003 6.557-5.338 11.892-11.893 11.892-1.997-.001-3.951-.5-5.688-1.448l-6.308 1.654zm6.757-4.047c1.519.9 3.588 1.506 5.628 1.507 5.437 0 9.856-4.419 9.859-9.856 0-2.633-1.026-5.11-2.89-6.974s-4.339-2.892-6.97-2.892c-5.439 0-9.856 4.417-9.859 9.858 0 2.047.544 4.047 1.574 5.834l-1.012 3.705 3.868-1.015zm11.233-7.514c-.301-.15-.1.45-.1.45s-.1.25-.1.25-.3.35-.3.35-.25.25-.25.25c-.25.25-.45.35-.45.35-.35.15-.65.25-.65.25-.5.15-.9.15-.9.15-.55 0-1.15-.15-1.15-.15-1.25-.45-2.2-.9-2.2-.9-.85-.45-1.75-1.35-1.75-1.35-1.05-1.25-1.6-2.5-1.6-2.5-.15-.45 0-.85 0-.85.1-.25.3-.55.3-.55.2-.25.3-.4.3-.4.15-.25.1-.45.1-.45-.05-.2-.45-1.1-.45-1.1-.15-.35-.3-.3-.45-.3-.15 0-.3 0-.45 0-.25 0-.6.1-.85.35-.25.25-1 1-1 2.4s1.25 2.75 1.4 2.95c.15.2 2.45 3.75 5.95 5.25.8.35 1.5.55 2 .7.85.25 1.65.2 2.25.1.7-.1 2.1-.85 2.4-1.65.3-.8.3-1.5.2-1.65-.1-.15-.35-.25-.65-.4z"/></svg>
+                            Chiedi disponibilità
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+        <footer class="mt-12 border-t border-gray-200 pt-8 pb-12 text-center">
+    <div class="mb-6 text-[10px] text-gray-400 leading-relaxed uppercase tracking-widest">
+        <p class="font-bold text-gray-600">SEVEN SHOES S.R.L.S.</p>
+        <p>Sede Legale: Via G. e G. Sicuri 3/a - Parma (Italy) | P.IVA: 02903030340</p>
+        <p>Capitale Sociale: €500 i.v. | REA: PR-276209</p>
+    </div>
+
+    <div class="flex flex-wrap justify-center gap-4 text-[11px] font-bold uppercase tracking-tighter text-vintage-dark/60">
+        <button @click="infoSelezionata = 'chi-siamo'" class="hover:text-vintage-pink transition-colors">Chi Siamo</button>
+        <button @click="infoSelezionata = 'resi'" class="hover:text-vintage-pink transition-colors">Politica Resi</button>
+        <button @click="infoSelezionata = 'privacy'" class="hover:text-vintage-pink transition-colors">Privacy</button>
+    </div>
+
+    <div x-show="infoSelezionata" x-cloak 
+         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+         @click.away="infoSelezionata = null">
+        
+        <div class="bg-white rounded-[2rem] max-w-lg w-full max-h-[80vh] overflow-y-auto p-8 shadow-2xl relative">
+            <button @click="infoSelezionata = null" class="absolute top-4 right-4 text-gray-400 hover:text-black text-2xl">&times;</button>
+            
+            <div class="prose prose-sm font-sans text-left">
+                <template x-if="infoSelezionata === 'chi-siamo'">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4" style="font-family: 'Playfair Display', serif;">Chi Siamo</h3>
+                        <p>Cosplay & Vintage è il progetto digitale di [Nome SRLS]. Selezioniamo capi unici e stock di qualità per appassionati e professionisti del settore.</p>
+                        <p class="mt-2 text-gray-500">Dopo anni di esperienza nel negozio fisico, oggi ci trovi online con spedizioni in tutta Italia.</p>
+                    </div>
+                </template>
+
+                <template x-if="infoSelezionata === 'resi'">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4" style="font-family: 'Playfair Display', serif;">Politica Resi</h3>
+                        <p>Ai sensi del Codice del Consumo, hai il diritto di recedere dall'acquisto entro <strong>14 giorni</strong> dal ricevimento della merce.</p>
+                        <p class="mt-2">I prodotti devono essere restituiti nelle condizioni originali. Le spese di spedizione per il reso sono a carico dell'acquirente.</p>
+                        <p class="mt-2 font-bold">Nota per gli Stock:</p>
+                        <p class="text-xs italic">Per i lotti Stock Colli (B2B), il reso è regolato dalle condizioni di vendita tra professionisti concordate in fase di fatturazione.</p>
+                    </div>
+                </template>
+
+                <template x-if="infoSelezionata === 'privacy'">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4" style="font-family: 'Playfair Display', serif;">Privacy Policy</h3>
+                        <p>I tuoi dati (nome, indirizzo, telefono) vengono utilizzati esclusivamente per la gestione dell'ordine e la fatturazione elettronica tramite Fatture in Cloud.</p>
+                        <p class="mt-2 text-xs italic">Nessun dato viene ceduto a terzi per scopi pubblicitari. Il titolare del trattamento è [Nome Tua SRLS].</p>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+</footer>
+    </main>
+
+    <script>
+        function store() {
+    return {
+        prodotti: [],
+        search: '',
+        categoriaSelezionata: 'tutti',
+        admin: false,
+        clickCount: 0,
+        
+        // --- QUI AGGIUNGIAMO LE INFO LEGALI ---
+        infoSelezionata: null, 
+        testiLegali: {
+            chiSiamo: "Cosplay & Vintage è il progetto di Seven Shoes srls. Selezioniamo capi unici e stock di qualità per appassionati e professionisti.",
+            resi: "Ai sensi del Codice del Consumo (D.Lgs. 206/2005), hai il diritto di recedere dall'acquisto entro 14 giorni dal ricevimento del pacco. Condizioni: Il prodotto deve essere restituito integro, nel suo imballaggio originale e con eventuali cartellini presenti. Procedura: Contattaci su WhatsApp per avviare la pratica. Costi: Le spese di spedizione per la restituzione sono a carico dell'acquirente. Una volta ricevuto e verificato il prodotto, emetteremo il rimborso o un buono acquisto. Spese di spedizione a carico del cliente.",
+            privacy: "I tuoi dati personali (Nome, Cognome, Indirizzo e Telefono) vengono raccolti esclusivamente per la finalizzazione dell'ordine, la spedizione e gli obblighi fiscali di fatturazione elettronica tramite la piattaforma Fatture in Cloud. Titolare del trattamento: [Nome della tua SRLS], con sede in [Indirizzo Sede Legale]. I dati non verranno ceduti a terzi per scopi di marketing. In ogni momento puoi scriverci per richiederne la cancellazione dai nostri archivi gestionali."
+        },
+
+        // --- QUI MANTENIAMO LE TUE TAGLIE (NON CANCELLARLE!) ---
+        taglieAbiti: ['S', 'M', 'L', 'XL', 'XXL'],
+        numeriScarpe: ['35', '36', '37', '38', '39', '40', '41'],
+        
+        // ... da qui in poi continua il tuo urlFoglio e la funzione init() ...
+                urlFoglio: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRRxWL4tCODR9tUs2h_9RIo9NwDxKZy1KdMxOiT5TKYq9DFbohH2h369ATqJAJWxGcc43ryxC0PdIDg/pub?output=csv",
+
+                async init() {
+                    const r = await fetch(this.urlFoglio + "&t=" + Date.now());
+                    const text = await r.text();
+                    this.prodotti = this.parseCSV(text);
+                },
+
+                toggleAdmin() {
+                    this.clickCount++;
+                    if (this.clickCount >= 2) { this.admin = !this.admin; this.clickCount = 0; }
+                },
+
+                parseCSV(csv) {
+                    const righe = csv.split(/\r?\n/).filter(r => r.trim() !== "");
+                    return righe.slice(1).map((riga, i) => {
+                        const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
+                        const d = riga.split(regex).map(s => s.replace(/^"|"$/g, '').trim());
+                        return {
+                            id: i,
+                            nome: d[1] || '',
+                            categoria: d[2] || 'Vario',
+                            prezzo: d[3] || '0',
+                            foto: d[4] || '',
+                            descrizione: d[5] || '',
+                            giacenza: d[6] ? d[6].split(',').map(t => t.trim()).filter(t => t !== "") : null,
+                            tagliaScelta: ''
+                        };
+                    });
+                },
+
+                getCategorie() {
+                    const cats = this.prodotti.map(p => p.categoria);
+                    return [...new Set(cats)].filter(c => c !== '');
+                },
+
+                getOpzioni(p) {
+                    // Se nel foglio Google hai scritto le taglie separate da virgola nella colonna 7, usa quelle
+                    if (p.giacenza && p.giacenza.length > 0) return p.giacenza;
+                    // Altrimenti usa i predefiniti in base alla categoria
+                    const cat = p.categoria.toLowerCase();
+                    if (cat.includes('scarp') || cat.includes('calzatur')) return this.numeriScarpe;
+                    return this.taglieAbiti;
+                },
+
+                prodottiFiltrati() {
+                    return this.prodotti.filter(p => {
+                        const matchesSearch = p.nome.toLowerCase().includes(this.search.toLowerCase()) || 
+                                              p.descrizione.toLowerCase().includes(this.search.toLowerCase());
+                        const matchesCat = this.categoriaSelezionata === 'tutti' || p.categoria === this.categoriaSelezionata;
+                        return matchesSearch && matchesCat;
+                    });
+                },
+
+                mandaOrdine(p) {
+                    if (!p.tagliaScelta) return alert("Per favore, seleziona una misura!");
+                    const tel = "393533416458";
+                    const msg = `Ciao! Ho visto sul catalogo:\n\n*${p.nome}*\nTaglia: ${p.tagliaScelta}\nPrezzo: €${p.prezzo}\n\nÈ ancora disponibile?`;
+                    window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
