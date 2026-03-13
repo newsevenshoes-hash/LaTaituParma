@@ -180,91 +180,79 @@
     </main>
 
     <script>
-        function store() {
-    return {
-        prodotti: [],
-        search: '',
-        categoriaSelezionata: 'tutti',
-        admin: false,
-        clickCount: 0,
-        
-        // --- QUI AGGIUNGIAMO LE INFO LEGALI ---
-        infoSelezionata: null, 
-        testiLegali: {
-            chiSiamo: "La Taitù Parma è il progetto di Seven Shoes srls. Selezioniamo capi unici e stock di qualità per appassionati e professionisti.",
-            resi: "Ai sensi del Codice del Consumo (D.Lgs. 206/2005), hai il diritto di recedere dall'acquisto entro 14 giorni dal ricevimento del pacco. Condizioni: Il prodotto deve essere restituito integro, nel suo imballaggio originale e con eventuali cartellini presenti. Procedura: Contattaci su WhatsApp per avviare la pratica. Costi: Le spese di spedizione per la restituzione sono a carico dell'acquirente. Una volta ricevuto e verificato il prodotto, emetteremo il rimborso o un buono acquisto. Spese di spedizione a carico del cliente.",
-            privacy: "I tuoi dati personali (Nome, Cognome, Indirizzo e Telefono) vengono raccolti esclusivamente per la finalizzazione dell'ordine, la spedizione e gli obblighi fiscali di fatturazione elettronica tramite la piattaforma Fatture in Cloud. Titolare del trattamento: [Nome della tua SRLS], con sede in [Indirizzo Sede Legale]. I dati non verranno ceduti a terzi per scopi di marketing. In ogni momento puoi scriverci per richiederne la cancellazione dai nostri archivi gestionali."
-        },
+    function store() {
+        return {
+            prodotti: [],
+            search: '',
+            categoriaSelezionata: 'tutti',
+            admin: false,
+            clickCount: 0,
+            infoSelezionata: null,
+            urlFoglio: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRRxWL4tCODR9tUs2h_9RIo9NwDxKZy1KdMxOiT5TKYq9DFbohH2h369ATqJAJWxGcc43ryxC0PdIDg/pub?output=csv",
 
-        // --- QUI MANTENIAMO LE TUE TAGLIE (NON CANCELLARLE!) ---
-        taglieAbiti: ['S', 'M', 'L', 'XL', 'XXL'],
-        numeriScarpe: ['35', '36', '37', '38', '39', '40', '41'],
-        
-        // ... da qui in poi continua il tuo urlFoglio e la funzione init() ...
-                urlFoglio: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRRxWL4tCODR9tUs2h_9RIo9NwDxKZy1KdMxOiT5TKYq9DFbohH2h369ATqJAJWxGcc43ryxC0PdIDg/pub?output=csv",
-
-                async init() {
+            // Questa funzione parte appena la pagina viene caricata
+            async init() {
+                try {
                     const r = await fetch(this.urlFoglio + "&t=" + Date.now());
                     const text = await r.text();
                     this.prodotti = this.parseCSV(text);
-                },
-
-                toggleAdmin() {
-                    this.clickCount++;
-                    if (this.clickCount >= 2) { this.admin = !this.admin; this.clickCount = 0; }
-                },
-
-                parseCSV(csv) {
-    const righe = csv.split(/\r?\n/).filter(r => r.trim() !== "");
-    return righe.slice(1).map((riga, i) => {
-        const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
-        const d = riga.split(regex).map(s => s.replace(/^"|"$/g, '').trim());
-        
-        return {
-            id: d[0] || i,         // Colonna A
-            nome: d[1] || '',      // Colonna B
-            categoria: d[2] || '', // Colonna C
-            prezzo: d[3] || '0',   // Colonna D
-            foto: d[4] || '',      // Colonna E
-            descrizione: d[5] || '',// Colonna F
-            giacenza: d[6] ? d[6].split(',').map(t => t.trim()) : [], // Colonna G
-            modello3d: d[7] || '', // Colonna H (il tuo link 3D)
-            tagliaScelta: ''
-        };
-    });
-},
-                getCategorie() {
-                    const cats = this.prodotti.map(p => p.categoria);
-                    return [...new Set(cats)].filter(c => c !== '');
-                },
-
-                getOpzioni(p) {
-                    // Se nel foglio Google hai scritto le taglie separate da virgola nella colonna 7, usa quelle
-                    if (p.giacenza && p.giacenza.length > 0) return p.giacenza;
-                    // Altrimenti usa i predefiniti in base alla categoria
-                    const cat = p.categoria.toLowerCase();
-                    if (cat.includes('scarp') || cat.includes('calzatur')) return this.numeriScarpe;
-                    return this.taglieAbiti;
-                },
-
-                prodottiFiltrati() {
-                    return this.prodotti.filter(p => {
-                        const matchesSearch = p.nome.toLowerCase().includes(this.search.toLowerCase()) || 
-                                              p.descrizione.toLowerCase().includes(this.search.toLowerCase());
-                        const matchesCat = this.categoriaSelezionata === 'tutti' || p.categoria === this.categoriaSelezionata;
-                        return matchesSearch && matchesCat;
-                    });
-                },
-
-                mandaOrdine(p) {
-                    if (!p.tagliaScelta) return alert("Per favore, seleziona una misura!");
-                    const tel = "393533416458";
-                    const msg = `Ciao! Ho visto sul catalogo:\n\n*${p.nome}*\nTaglia: ${p.tagliaScelta}\nPrezzo: €${p.prezzo}\n\nÈ ancora disponibile?`;
-                    window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`);
+                    console.log("Prodotti caricati:", this.prodotti.length);
+                } catch (e) {
+                    console.error("Errore nel caricamento del CSV:", e);
                 }
+            },
+
+            // Qui mappiamo le colonne del tuo foglio (A=0, B=1, ... H=7)
+            parseCSV(csv) {
+                const righe = csv.split(/\r?\n/).filter(r => r.trim() !== "");
+                return righe.slice(1).map((riga, i) => {
+                    const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
+                    const d = riga.split(regex).map(s => s.replace(/^"|"$/g, '').trim());
+                    
+                    return {
+                        id: d[0] || i,         // Colonna A
+                        nome: d[1] || '',      // Colonna B
+                        categoria: d[2] || '', // Colonna C
+                        prezzo: d[3] || '0',   // Colonna D
+                        foto: d[4] || '',      // Colonna E
+                        descrizione: d[5] || '',// Colonna F
+                        giacenza: d[6] ? d[6].split(',').map(t => t.trim()) : [], // Colonna G
+                        modello3d: d[7] || '', // Colonna H
+                        tagliaScelta: ''
+                    };
+                });
+            },
+
+            toggleAdmin() {
+                this.clickCount++;
+                if (this.clickCount >= 2) { this.admin = !this.admin; this.clickCount = 0; }
+            },
+
+            getCategorie() {
+                return [...new Set(this.prodotti.map(p => p.categoria))].filter(c => c !== '');
+            },
+
+            getOpzioni(p) {
+                if (p.giacenza && p.giacenza.length > 0) return p.giacenza;
+                return p.categoria.toLowerCase().includes('scarp') ? ['35', '36', '37', '38', '39', '40', '41'] : ['S', 'M', 'L', 'XL'];
+            },
+
+            prodottiFiltrati() {
+                return this.prodotti.filter(p => {
+                    const matchS = p.nome.toLowerCase().includes(this.search.toLowerCase()) || 
+                                   p.descrizione.toLowerCase().includes(this.search.toLowerCase());
+                    const matchC = this.categoriaSelezionata === 'tutti' || p.categoria === this.categoriaSelezionata;
+                    return matchS && matchC;
+                });
+            },
+
+            mandaOrdine(p) {
+                if (!p.tagliaScelta) return alert("Per favore, seleziona una misura!");
+                window.open(`https://wa.me/393533416458?text=${encodeURIComponent(`Ciao! Vorrei info su: ${p.nome} - Taglia: ${p.tagliaScelta}`)}`);
             }
         }
-    </script>
+    }
+</script>
 </body>
 
 </html>
