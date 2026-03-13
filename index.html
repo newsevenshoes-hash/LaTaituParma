@@ -227,13 +227,13 @@
         }
 
         return {
-            id: d[0] || i,         // Colonna A
-            nome: d[1] || '',      // Colonna B
-            categoria: d[2] || '', // Colonna C
-            prezzo: d[3] || '0',   // Colonna D
-            foto: d[4] || '',      // Colonna E
-            descrizione: d[5] || '',// Colonna F
-            giacenza: d[6] ? d[6].split(',').map(t => t.trim()) : [], // Colonna G
+            id: d[1] || i,         // Colonna A
+            nome: d[2] || '',      // Colonna B
+            categoria: d[3] || '', // Colonna C
+            prezzo: d[4] || '0',   // Colonna D
+            foto: d[5] || '',      // Colonna E
+            descrizione: d[6] || '',// Colonna F
+            giacenza: d[7] ? d[7].split(',').map(t => t.trim()) : [], // Colonna G
             modello3d: link3d,     // Colonna H, pulita e con lo slash
             tagliaScelta: ''
         };
