@@ -220,21 +220,15 @@
         const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
         const d = riga.split(regex).map(s => s.replace(/^"|"$/g, '').trim());
         
-        // Pulisci il link del 3D: assicurati che inizi con / e non abbia spazi
-        let link3d = d[7] ? d[7].trim() : '';
-        if (link3d && !link3d.startsWith('/')) {
-            link3d = '/' + link3d;
-        }
-
         return {
-            id: d[1] || i,         // Colonna A
-            nome: d[2] || '',      // Colonna B
-            categoria: d[3] || '', // Colonna C
-            prezzo: d[4] || '0',   // Colonna D
-            foto: d[5] || '',      // Colonna E
-            descrizione: d[6] || '',// Colonna F
-            giacenza: d[7] ? d[7].split(',').map(t => t.trim()) : [], // Colonna G
-            modello3d: link3d,     // Colonna H, pulita e con lo slash
+            id: d[0] || i,         // Colonna A
+            nome: d[1] || '',      // Colonna B
+            categoria: d[2] || '', // Colonna C
+            prezzo: d[3] || '0',   // Colonna D
+            foto: d[4] || '',      // Colonna E
+            descrizione: d[5] || '',// Colonna F
+            giacenza: d[6] ? d[6].split(',').map(t => t.trim()) : [], // Colonna G
+            modello3d: d[7] || '', // Colonna H (il tuo link 3D)
             tagliaScelta: ''
         };
     });
