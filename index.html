@@ -73,10 +73,31 @@
             <template x-for="prodotto in prodottiFiltrati()" :key="prodotto.id">
                 <div class="bg-white rounded-[2rem] shadow-lg overflow-hidden flex flex-col border-b-8 border-vintage-teal transition-transform duration-300">
                     
-                    <div class="relative w-full h-80 bg-gray-100 overflow-hidden">
-                        <img :src="prodotto.foto" class="w-full h-full object-cover" @error="$el.src='https://via.placeholder.com/400x500?text=Immagine+In+Arrivo'">
-                        <span class="absolute top-4 right-4 bg-vintage-teal text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter" x-text="prodotto.categoria"></span>
-                    </div>
+                    <div x-data="{ mostra3d: false }" class="relative w-full h-80 bg-gray-100 overflow-hidden">
+    <img :src="prodotto.foto" 
+         class="w-full h-full object-cover transition-opacity duration-300" 
+         :class="mostra3d ? 'opacity-0' : 'opacity-100'"
+         @error="$el.src='https://via.placeholder.com/400x500?text=Immagine+In+Arrivo'">
+    
+    <template x-if="prodotto.modello3d && mostra3d">
+        <model-viewer 
+            :src="prodotto.modello3d" 
+            class="absolute inset-0 w-full h-full"
+            auto-rotate 
+            camera-controls 
+            shadow-intensity="1"
+            environment-image="neutral">
+        </model-viewer>
+    </template>
+
+    <button x-show="prodotto.modello3d" 
+            @click="mostra3d = !mostra3d" 
+            class="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold uppercase shadow-lg hover:bg-vintage-pink hover:text-white transition-colors z-10">
+        <span x-text="mostra3d ? '📷 FOTO' : '📦 VEDI 3D'"></span>
+    </button>
+
+    <span class="absolute top-4 right-4 bg-vintage-teal text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter" x-text="prodotto.categoria"></span>
+</div>
                     
                     <div class="p-6 flex flex-col flex-grow">
                         <h2 class="text-2xl font-bold mb-2 text-vintage-dark" x-text="prodotto.nome"></h2>
