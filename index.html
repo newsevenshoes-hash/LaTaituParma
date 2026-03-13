@@ -216,19 +216,17 @@
 
                 parseCSV(csv) {
                     const righe = csv.split(/\r?\n/).filter(r => r.trim() !== "");
-                    return righe.slice(1).map((riga, i) => {
-                        const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
-                        const d = riga.split(regex).map(s => s.replace(/^"|"$/g, '').trim());
-                        return {
-                            id: i,
-                            nome: d[1] || '',
-                            categoria: d[2] || 'Vario',
-                            prezzo: d[3] || '0',
-                            foto: d[4] || '',
-                            descrizione: d[5] || '',
-                            giacenza: d[6] ? d[6].split(',').map(t => t.trim()).filter(t => t !== "") : null,
-                            tagliaScelta: ''
-                        };
+                    return {
+    id: i,
+    nome: d[1] || '',
+    categoria: d[2] || 'Vario',
+    prezzo: d[3] || '0',
+    foto: d[4] || '',
+    descrizione: d[5] || '',
+    giacenza: d[6] ? d[6].split(',').map(t => t.trim()).filter(t => t !== "") : null,
+    modello3d: d[7] || '', // <--- AGGIUNGI QUESTA RIGA
+    tagliaScelta: ''
+};
                     });
                 },
 
