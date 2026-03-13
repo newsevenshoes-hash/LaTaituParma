@@ -17,8 +17,15 @@
                         <img :src="prodotto.foto" class="w-full h-full object-cover" x-show="!mostra3d">
                         
                         <template x-if="prodotto.modello3d">
-                            <model-viewer x-show="mostra3d" :src="prodotto.modello3d" auto-rotate camera-controls class="w-full h-full"></model-viewer>
-                        </template>
+    <model-viewer 
+        x-show="mostra3d"
+        :src="prodotto.modello3d" 
+        auto-rotate 
+        camera-controls 
+        style="height: 320px; width: 100%;" 
+        class="bg-gray-100">
+    </model-viewer>
+</template>
 
                         <button @click="mostra3d = !mostra3d" x-show="prodotto.modello3d" class="absolute bottom-4 left-4 bg-white px-4 py-2 rounded-full shadow text-xs font-bold uppercase">
                             <span x-text="mostra3d ? 'Foto' : 'Vedi 3D'"></span>
@@ -55,6 +62,7 @@
     </script>
 </body>
 </html>
+
 
 
 
