@@ -216,20 +216,25 @@
 
                 parseCSV(csv) {
     const righe = csv.split(/\r?\n/).filter(r => r.trim() !== "");
-    // Manteniamo la logica classica che usavi prima
     return righe.slice(1).map((riga, i) => {
-        const d = riga.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, '').trim());
+        const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
+        const d = riga.split(regex).map(s => s.replace(/^"|"$/g, '').trim());
+        
+        // Pulisci il link del 3D: assicurati che inizi con / e non abbia spazi
+        let link3d = d[7] ? d[7].trim() : '';
+        if (link3d && !link3d.startsWith('/')) {
+            link3d = '/' + link3d;
+        }
+
         return {
-            id: i,
-            nome: d[1] || '',
-            categoria: d[2] || 'Vario',
-            prezzo: d[3] || '0',
-            foto: d[4] || '',
-            descrizione: d[5] || '',
-            giacenza: d[6] ? d[6].split(',').map(t => t.trim()).filter(t => t !== "") : null,
-            // Qui cerchiamo la colonna del 3D. 
-            // Se prima avevi 6 colonne (0-5), la 7ma è d[6].
-            modello3d: d[7] || '', 
+            id: d[0] || i,         // Colonna A
+            nome: d[1] || '',      // Colonna B
+            categoria: d[2] || '', // Colonna C
+            prezzo: d[3] || '0',   // Colonna D
+            foto: d[4] || '',      // Colonna E
+            descrizione: d[5] || '',// Colonna F
+            giacenza: d[6] ? d[6].split(',').map(t => t.trim()) : [], // Colonna G
+            modello3d: link3d,     // Colonna H, pulita e con lo slash
             tagliaScelta: ''
         };
     });
