@@ -3,62 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>La Taitù Parma</title>
+    <title>La Taitù Parma - Catalogo</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        model-viewer {
+            width: 100%;
+            height: 100%;
+            --poster-color: transparent;
+        }
+    </style>
 </head>
-<body class="bg-gray-50" x-data="store()" x-init="init()">
-    <main class="max-w-4xl mx-auto p-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <template x-for="prodotto in prodotti" :key="prodotto.id">
-                <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
-                    <div class="relative w-full h-80 bg-gray-200" x-data="{ mostra3d: false }">
-                        <img :src="prodotto.foto" class="w-full h-full object-cover" x-show="!mostra3d">
-                        
-<template x-if="prodotto.modello3d">
-    <model-viewer 
-        x-show="mostra3d"
-        :src="prodotto.modello3d" 
-        auto-rotate 
-        camera-controls 
-        style="width: 100%; height: 400px; background-color: #f3f4f6;">
-    </model-viewer>
-</template>
+<body class="bg-white text-gray-900 font-sans" x-data="{ prodotti: [], loading: true }" x-init="
+    fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vRRxWL4tCODR9tUs2h_9RIo9NwDxKZy1KdMxOiT5TKYq9DFbohH2h369ATqJAJWxGcc43ryxC0PdIDg/pub?output=csv&t=' + Date.now())
+    .then(r => r.text())
+    .then(t => { 
+        prodotti = t.split(/\r?\n/).slice(1).map(r => {
+            let d = r.split(/,(?=(?:(?:[^&quot;]*&quot;){2})*[^&quot;]*$)/).map(s => s.replace(/^&quot;|&quot;$/g, '').trim());
+            return { nome: d[1], descrizione: d[2], prezzo: d[3], foto: d[4], modello3d: d[7] };
+        });
+        loading = false;
+    })">
 
-                        <button @click="mostra3d = !mostra3d" x-show="prodotto.modello3d" class="absolute bottom-4 left-4 bg-white px-4 py-2 rounded-full shadow text-xs font-bold uppercase">
-                            <span x-text="mostra3d ? 'Foto' : 'Vedi 3D'"></span>
+    <header class="p-6 text-center border-b">
+        <img src="taitu_palme_logo.png" alt="La Taitù Parma" class="h-20 mx-auto mb-2">
+        <h1 class="text-xl tracking-widest uppercase font-light">Collezione 2026</h1>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-8">
+        <div x-show="loading" class="text-center py-20 text-gray-400">Caricamento catalogo...</div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8" x-cloak>
+            <template x-for="p in prodotti" :key="p.nome">
+                <div class="group flex flex-col border border-gray-100 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    
+                    <div x-data="{ mostra3d: false }" class="relative h-80 bg-gray-50 overflow-hidden">
+                        <img :src="p.foto" 
+                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                             x-show="!mostra3d" 
+                             @click="if(p.modello3d) mostra3d = true">
+                        
+                        <template x-if="p.modello3d && mostra3d">
+                            <model-viewer 
+                                :src="p.modello3d" 
+                                auto-rotate 
+                                camera-controls 
+                                shadow-intensity="1"
+                                environment-image="neutral"
+                                exposure="1">
+                                <button slot="exit-webxr-button" @click="mostra3d = false" class="bg-white p-2 m-2 rounded-full shadow">Esci</button>
+                            </model-viewer>
+                        </template>
+
+                        <button x-show="p.modello3d" 
+                                @click="mostra3d = !mostra3d" 
+                                class="absolute bottom-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-full text-xs font-bold tracking-tighter shadow-lg hover:bg-black hover:text-white transition-colors">
+                            <span x-text="mostra3d ? 'VEDI FOTO' : 'VEDI 3D'"></span>
                         </button>
                     </div>
-                    <div class="p-6">
-                        <h2 class="text-xl font-bold" x-text="prodotto.nome"></h2>
-                        <p class="text-lg text-pink-600" x-text="'€' + prodotto.prezzo"></p>
+
+                    <div class="p-5 flex-grow flex flex-col justify-between bg-white">
+                        <div>
+                            <h3 class="text-lg font-medium mb-1 uppercase tracking-tight" x-text="p.nome"></h3>
+                            <p class="text-sm text-gray-500 mb-4 italic" x-text="p.descrizione"></p>
+                        </div>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-xl font-light" x-text="'€' + p.prezzo"></span>
+                            <button class="border border-black px-6 py-2 text-xs uppercase tracking-widest hover:bg-black hover:text-white transition-colors">
+                                Dettagli
+                            </button>
+                        </div>
                     </div>
                 </div>
             </template>
         </div>
     </main>
 
-    <script>
-        function store() {
-            return {
-                prodotti: [],
-                urlFoglio: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRRxWL4tCODR9tUs2h_9RIo9NwDxKZy1KdMxOiT5TKYq9DFbohH2h369ATqJAJWxGcc43ryxC0PdIDg/pub?output=csv",
-                async init() {
-                    const r = await fetch(this.urlFoglio + "&t=" + Date.now());
-                    const text = await r.text();
-                    this.prodotti = this.parseCSV(text);
-                },
-                parseCSV(csv) {
-                    const righe = csv.split(/\r?\n/).filter(r => r.trim() !== "");
-                    return righe.slice(1).map((riga, i) => {
-                        const d = riga.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, '').trim());
-                        return { id: i, nome: d[1] || '', prezzo: d[3] || '0', foto: d[4] || '', modello3d: d[7] || '' };
-                    });
-                }
-            }
-        }
-    </script>
+    <footer class="p-10 text-center text-gray-400 text-xs tracking-widest border-t mt-10">
+        &copy; 2026 LA TAITÙ PARMA - TUTTI I DIRITTI RISERVATI
+    </footer>
 </body>
 </html>
 
